@@ -9,12 +9,17 @@ class DailyTracker {
         this.selectedDate = null;
         this.data = {};
         this.startYear = 2026;
-        
+
+        // 목표 기한 설정
+        this.goalStartDate = new Date(2026, 0, 1); // 2026.01.01
+        this.goalEndDate = new Date(2029, 11, 31); // 2029.12.31
+
         this.init();
     }
 
     async init() {
         await this.loadData();
+        this.updateProgress();
         this.renderHeatmap();
         this.updateStats();
         this.bindEvents();
@@ -58,7 +63,7 @@ class DailyTracker {
 
         // Generate cells for entire year (53 weeks max)
         let currentDate = new Date(startDate);
-        
+
         while (currentDate <= yearEnd || currentDate.getDay() !== 0) {
             const dateStr = this.formatDate(currentDate);
             const dayData = this.data[dateStr] || { level: 0 };
@@ -67,20 +72,20 @@ class DailyTracker {
 
             const cell = document.createElement('div');
             cell.className = `heatmap-cell level-${dayData.level}`;
-            
+
             if (isFuture) {
                 cell.classList.add('future');
             }
-            
+
             if (!isCurrentYear) {
                 cell.style.visibility = 'hidden';
             }
-            
+
             cell.dataset.date = dateStr;
             cell.dataset.tooltip = this.formatTooltip(currentDate, dayData);
-            
+
             grid.appendChild(cell);
-            
+
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
@@ -96,17 +101,60 @@ class DailyTracker {
     }
 
     formatTooltip(date, data) {
-        const dateStr = date.toLocaleDateString('ko-KR', { 
-            year: 'numeric', 
-            month: 'long', 
+        const dateStr = date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
             day: 'numeric',
             weekday: 'short'
         });
-        
+
         if (data.level > 0) {
             return `${dateStr}: ${data.title || '기록 있음'}`;
         }
         return `${dateStr}: 기록 없음`;
+    }
+
+    updateProgress() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Calculate total period in days
+        const totalMs = this.goalEndDate.getTime() - this.goalStartDate.getTime();
+        const totalDays = Math.ceil(totalMs / (1000 * 60 * 60 * 24));
+
+        // Calculate elapsed days
+        const elapsedMs = today.getTime() - this.goalStartDate.getTime();
+        const elapsedDays = Math.max(0, Math.ceil(elapsedMs / (1000 * 60 * 60 * 24)));
+
+        // Calculate remaining days
+        const remainingMs = this.goalEndDate.getTime() - today.getTime();
+        const remainingDays = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+
+        // Calculate percentage
+        const percentage = Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100));
+
+        // Update UI
+        document.getElementById('elapsedDays').textContent = elapsedDays.toLocaleString();
+        document.getElementById('remainingDays').textContent = remainingDays.toLocaleString();
+        document.getElementById('totalPeriod').textContent = totalDays.toLocaleString() + '일';
+        document.getElementById('daysRemaining').textContent = remainingDays.toLocaleString() + '일 남음';
+
+        // Update progress bar
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        progressBar.style.width = `${Math.max(percentage, 5)}%`;
+        progressText.textContent = `${percentage.toFixed(1)}%`;
+
+        // Update date displays
+        document.getElementById('startDate').textContent = this.formatDisplayDate(this.goalStartDate);
+        document.getElementById('endDate').textContent = this.formatDisplayDate(this.goalEndDate);
+    }
+
+    formatDisplayDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}.${month}.${day}`;
     }
 
     updateStats() {
@@ -123,7 +171,7 @@ class DailyTracker {
         let streak = 0;
         let checkDate = new Date(today);
         checkDate.setHours(0, 0, 0, 0);
-        
+
         while (true) {
             const dateStr = this.formatDate(checkDate);
             if (this.data[dateStr] && this.data[dateStr].level > 0) {
@@ -138,9 +186,9 @@ class DailyTracker {
         // This month's records
         const thisMonth = entries.filter(([date, v]) => {
             const d = new Date(date);
-            return d.getMonth() === currentMonth && 
-                   d.getFullYear() === currentYear && 
-                   v.level > 0;
+            return d.getMonth() === currentMonth &&
+                d.getFullYear() === currentYear &&
+                v.level > 0;
         }).length;
         document.getElementById('thisMonth').textContent = thisMonth;
     }
@@ -148,7 +196,7 @@ class DailyTracker {
     bindEvents() {
         // Heatmap cell clicks
         document.getElementById('heatmapGrid').addEventListener('click', (e) => {
-            if (e.target.classList.contains('heatmap-cell') && 
+            if (e.target.classList.contains('heatmap-cell') &&
                 !e.target.classList.contains('future')) {
                 this.selectDate(e.target.dataset.date);
             }
@@ -175,7 +223,7 @@ class DailyTracker {
         document.querySelectorAll('.heatmap-cell.selected').forEach(cell => {
             cell.classList.remove('selected');
         });
-        
+
         const cell = document.querySelector(`[data-date="${dateStr}"]`);
         if (cell) {
             cell.classList.add('selected');
@@ -214,7 +262,7 @@ class DailyTracker {
 
     async loadDayContent(dateStr, data) {
         const content = document.getElementById('detailContent');
-        
+
         if (data.level === 0) {
             content.innerHTML = `
                 <p class="placeholder-text">
@@ -230,12 +278,12 @@ class DailyTracker {
         try {
             const response = await fetch(`data/${dateStr}.md`);
             if (!response.ok) throw new Error('File not found');
-            
+
             let markdown = await response.text();
-            
+
             // Remove frontmatter
             markdown = markdown.replace(/^---[\s\S]*?---\n*/, '');
-            
+
             // Parse markdown
             content.innerHTML = marked.parse(markdown);
         } catch (error) {

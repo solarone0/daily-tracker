@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
         <header class="header">
@@ -17,6 +19,43 @@
         </header>
 
         <main class="main">
+            <!-- Progress Section -->
+            <section class="progress-section glass-card">
+                <div class="progress-header">
+                    <div class="progress-dates">
+                        <span class="date-label">시작</span>
+                        <span class="date-value" id="startDate">2026.01.01</span>
+                    </div>
+                    <div class="progress-center">
+                        <span class="progress-title">🚀 목표까지</span>
+                        <span class="progress-remaining" id="daysRemaining">0일 남음</span>
+                    </div>
+                    <div class="progress-dates">
+                        <span class="date-label">목표</span>
+                        <span class="date-value" id="endDate">2029.12.31</span>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar">
+                        <span class="progress-text" id="progressText">0%</span>
+                    </div>
+                </div>
+                <div class="progress-stats">
+                    <div class="progress-stat">
+                        <span class="stat-number" id="elapsedDays">0</span>
+                        <span class="stat-desc">경과일</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="stat-number" id="remainingDays">0</span>
+                        <span class="stat-desc">남은 일</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="stat-number" id="totalPeriod">0</span>
+                        <span class="stat-desc">전체 기간</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Stats Section -->
             <section class="stats-section">
                 <div class="stat-card">
@@ -83,4 +122,5 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
