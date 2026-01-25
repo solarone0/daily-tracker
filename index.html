@@ -112,6 +112,81 @@
                     <p class="placeholder-text">히트맵에서 날짜를 클릭하면 상세 기록을 볼 수 있습니다.</p>
                 </div>
             </section>
+
+            <!-- Rocket Launch Visual -->
+            <section class="rocket-section glass-card">
+                <div class="rocket-header">
+                    <h2>🚀 Mission Progress</h2>
+                    <span class="rocket-phase" id="rocketPhase">Phase 1: 발사대 건설</span>
+                </div>
+                <div class="rocket-visual">
+                    <div class="isometric-scene" id="rocketScene">
+                        <!-- Ground/Platform -->
+                        <div class="iso-ground"></div>
+
+                        <!-- Launch Tower -->
+                        <div class="iso-tower" id="launchTower">
+                            <div class="tower-base"></div>
+                            <div class="tower-structure"></div>
+                            <div class="tower-arm"></div>
+                        </div>
+
+                        <!-- Launch Pad -->
+                        <div class="iso-pad" id="launchPad">
+                            <div class="pad-base"></div>
+                            <div class="pad-flame-trench"></div>
+                        </div>
+
+                        <!-- Rocket -->
+                        <div class="iso-rocket" id="rocket">
+                            <div class="rocket-booster"></div>
+                            <div class="rocket-body"></div>
+                            <div class="rocket-nose"></div>
+                            <div class="rocket-fins"></div>
+                        </div>
+
+                        <!-- Flame Effect -->
+                        <div class="rocket-flame" id="rocketFlame">
+                            <div class="flame-inner"></div>
+                            <div class="flame-outer"></div>
+                        </div>
+
+                        <!-- Smoke Effect -->
+                        <div class="smoke-cloud" id="smokeCloud"></div>
+
+                        <!-- Stars (for launch phase) -->
+                        <div class="stars" id="stars"></div>
+                    </div>
+
+                    <!-- Phase Indicators -->
+                    <div class="phase-indicators">
+                        <div class="phase-item active" data-phase="1">
+                            <div class="phase-dot"></div>
+                            <span>발사대 건설</span>
+                        </div>
+                        <div class="phase-line"></div>
+                        <div class="phase-item" data-phase="2">
+                            <div class="phase-dot"></div>
+                            <span>로켓 조립</span>
+                        </div>
+                        <div class="phase-line"></div>
+                        <div class="phase-item" data-phase="3">
+                            <div class="phase-dot"></div>
+                            <span>연료 주입</span>
+                        </div>
+                        <div class="phase-line"></div>
+                        <div class="phase-item" data-phase="4">
+                            <div class="phase-dot"></div>
+                            <span>카운트다운</span>
+                        </div>
+                        <div class="phase-line"></div>
+                        <div class="phase-item" data-phase="5">
+                            <div class="phase-dot"></div>
+                            <span>발사! 🔥</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <footer class="footer">

@@ -148,6 +148,93 @@ class DailyTracker {
         // Update date displays
         document.getElementById('startDate').textContent = this.formatDisplayDate(this.goalStartDate);
         document.getElementById('endDate').textContent = this.formatDisplayDate(this.goalEndDate);
+
+        // Update rocket phase based on progress
+        this.updateRocketPhase(percentage);
+    }
+
+    updateRocketPhase(percentage) {
+        // Phase thresholds (5 phases)
+        // Phase 1: 0-20% - 발사대 건설
+        // Phase 2: 20-40% - 로켓 조립
+        // Phase 3: 40-60% - 연료 주입
+        // Phase 4: 60-80% - 카운트다운
+        // Phase 5: 80-100% - 발사!
+
+        let phase = 1;
+        if (percentage >= 80) phase = 5;
+        else if (percentage >= 60) phase = 4;
+        else if (percentage >= 40) phase = 3;
+        else if (percentage >= 20) phase = 2;
+
+        const phaseNames = [
+            'Phase 1: 발사대 건설',
+            'Phase 2: 로켓 조립',
+            'Phase 3: 연료 주입',
+            'Phase 4: 카운트다운',
+            'Phase 5: 발사! 🔥'
+        ];
+
+        // Update phase text
+        const phaseLabel = document.getElementById('rocketPhase');
+        if (phaseLabel) {
+            phaseLabel.textContent = phaseNames[phase - 1];
+        }
+
+        // Update phase indicators
+        const phaseItems = document.querySelectorAll('.phase-item');
+        const phaseLines = document.querySelectorAll('.phase-line');
+
+        phaseItems.forEach((item, index) => {
+            item.classList.remove('active', 'completed');
+            if (index + 1 < phase) {
+                item.classList.add('completed');
+            } else if (index + 1 === phase) {
+                item.classList.add('active');
+            }
+        });
+
+        phaseLines.forEach((line, index) => {
+            line.classList.remove('completed');
+            if (index + 1 < phase) {
+                line.classList.add('completed');
+            }
+        });
+
+        // Update rocket visuals
+        const launchPad = document.getElementById('launchPad');
+        const launchTower = document.getElementById('launchTower');
+        const rocket = document.getElementById('rocket');
+        const rocketFlame = document.getElementById('rocketFlame');
+        const smokeCloud = document.getElementById('smokeCloud');
+        const towerArm = document.querySelector('.tower-arm');
+
+        if (!launchPad) return;
+
+        // Phase 1: Show launch pad
+        if (phase >= 1) {
+            launchPad.classList.add('visible');
+        }
+
+        // Phase 2: Show tower and rocket
+        if (phase >= 2) {
+            launchTower.classList.add('visible');
+            rocket.classList.add('visible');
+        }
+
+        // Phase 3: Keep rocket visible (fueling animation could be added)
+
+        // Phase 4: Retract tower arm
+        if (phase >= 4 && towerArm) {
+            towerArm.classList.add('retracted');
+        }
+
+        // Phase 5: Launch!
+        if (phase >= 5) {
+            rocketFlame.classList.add('active');
+            smokeCloud.classList.add('active');
+            rocket.classList.add('launching');
+        }
     }
 
     formatDisplayDate(date) {
