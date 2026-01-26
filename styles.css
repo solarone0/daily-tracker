@@ -209,6 +209,13 @@ body::before {
     color: var(--bg-primary);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-divider {
+    opacity: 0.6;
 }
 
 .progress-stats {
@@ -1141,13 +1148,33 @@ body::before {
     font-weight: 600;
 }
 
-.entry-date {
+.date-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.date-picker {
     background: var(--bg-tertiary);
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    color: var(--accent);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    caret-color: var(--accent);
+}
+
+.date-picker:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.date-picker::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
 }
 
 .entry-form {
@@ -1179,6 +1206,7 @@ body::before {
     font-size: 1rem;
     transition: all 0.2s ease;
     resize: vertical;
+    caret-color: var(--accent);
 }
 
 .form-group input:focus,

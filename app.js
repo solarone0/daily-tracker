@@ -190,8 +190,12 @@ class DailyTracker {
         // Update progress bar
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
-        progressBar.style.width = `${Math.max(percentage, 5)}%`;
+        const progressDays = document.getElementById('progressDays');
+        progressBar.style.width = `${Math.max(percentage, 12)}%`;
         progressText.textContent = `${percentage.toFixed(1)}%`;
+        if (progressDays) {
+            progressDays.textContent = elapsedDays.toLocaleString();
+        }
 
         // Update date displays
         document.getElementById('startDate').textContent = this.formatDisplayDate(this.goalStartDate);
@@ -333,7 +337,20 @@ class DailyTracker {
         document.getElementById('heatmapGrid').addEventListener('click', (e) => {
             if (e.target.classList.contains('heatmap-cell') &&
                 !e.target.classList.contains('future')) {
-                this.selectDate(e.target.dataset.date);
+                const dateStr = e.target.dataset.date;
+                this.selectDate(dateStr);
+
+                // Also load into entry form for editing
+                this.entryDate = dateStr;
+                const datePicker = document.getElementById('entryDatePicker');
+                if (datePicker) {
+                    datePicker.value = dateStr;
+                }
+                this.loadEntryForDate(dateStr);
+                this.updateFormTitle(dateStr);
+
+                // Scroll to entry form
+                document.getElementById('entryPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
 
@@ -356,15 +373,33 @@ class DailyTracker {
     initEntryForm() {
         const today = new Date();
         const todayStr = this.formatDate(today);
+        this.entryDate = todayStr;
 
-        // Set today's date in the form header
-        const entryDate = document.getElementById('entryDate');
-        if (entryDate) {
-            entryDate.textContent = today.toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'long'
+        // Initialize date picker
+        const datePicker = document.getElementById('entryDatePicker');
+        if (datePicker) {
+            datePicker.value = todayStr;
+            datePicker.max = todayStr; // Can't record future dates
+
+            datePicker.addEventListener('change', (e) => {
+                this.entryDate = e.target.value;
+                this.loadEntryForDate(e.target.value);
+                this.updateFormTitle(e.target.value);
+            });
+        }
+
+        // Today button
+        const todayBtn = document.getElementById('todayBtn');
+        if (todayBtn) {
+            todayBtn.addEventListener('click', () => {
+                const now = new Date();
+                const nowStr = this.formatDate(now);
+                this.entryDate = nowStr;
+                if (datePicker) {
+                    datePicker.value = nowStr;
+                }
+                this.loadEntryForDate(nowStr);
+                this.updateFormTitle(nowStr);
             });
         }
 
@@ -414,10 +449,45 @@ class DailyTracker {
         }
 
         // Load existing entry for today if exists
-        if (this.data[todayStr]) {
-            const existingData = this.data[todayStr];
-            const titleInput = document.getElementById('entryTitle');
-            const contentInput = document.getElementById('entryContent');
+        this.loadEntryForDate(todayStr);
+    }
+
+    updateFormTitle(dateStr) {
+        const formTitle = document.getElementById('entryFormTitle');
+        if (!formTitle) return;
+
+        const today = new Date();
+        const todayStr = this.formatDate(today);
+
+        if (dateStr === todayStr) {
+            formTitle.textContent = '📝 오늘의 기록';
+        } else {
+            const date = new Date(dateStr);
+            const displayDate = date.toLocaleDateString('ko-KR', {
+                month: 'long',
+                day: 'numeric'
+            });
+            formTitle.textContent = `📝 ${displayDate} 기록`;
+        }
+    }
+
+    loadEntryForDate(dateStr) {
+        const titleInput = document.getElementById('entryTitle');
+        const contentInput = document.getElementById('entryContent');
+
+        // Reset form
+        if (titleInput) titleInput.value = '';
+        if (contentInput) contentInput.value = '';
+        this.selectedLevel = 3;
+
+        // Reset level buttons
+        document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+        const defaultLevelBtn = document.querySelector('[data-level="3"]');
+        if (defaultLevelBtn) defaultLevelBtn.classList.add('active');
+
+        // Load existing data
+        if (this.data[dateStr]) {
+            const existingData = this.data[dateStr];
 
             if (titleInput && existingData.title) {
                 titleInput.value = existingData.title;
@@ -440,8 +510,7 @@ class DailyTracker {
         const title = document.getElementById('entryTitle').value.trim();
         const content = document.getElementById('entryContent').value;
         const level = this.selectedLevel;
-        const today = new Date();
-        const dateStr = this.formatDate(today);
+        const dateStr = this.entryDate || this.formatDate(new Date());
         const formStatus = document.getElementById('formStatus');
         const saveBtn = document.getElementById('saveBtn');
 

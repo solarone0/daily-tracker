@@ -37,7 +37,11 @@
                 </div>
                 <div class="progress-bar-container">
                     <div class="progress-bar" id="progressBar">
-                        <span class="progress-text" id="progressText">0%</span>
+                        <span class="progress-text">
+                            <span id="progressDays">0</span>일째
+                            <span class="progress-divider">|</span>
+                            <span id="progressText">0%</span>
+                        </span>
                     </div>
                 </div>
                 <div class="progress-stats">
@@ -116,13 +120,16 @@
             <!-- Entry Form Section -->
             <section class="entry-section glass-card" id="entryPanel">
                 <div class="entry-header">
-                    <h2>📝 오늘의 기록</h2>
-                    <span class="entry-date" id="entryDate"></span>
+                    <h2 id="entryFormTitle">📝 오늘의 기록</h2>
+                    <div class="date-picker-wrapper">
+                        <input type="date" id="entryDatePicker" class="date-picker">
+                        <button type="button" class="btn btn-sm btn-secondary" id="todayBtn">오늘</button>
+                    </div>
                 </div>
                 <form class="entry-form" id="entryForm">
                     <div class="form-group">
                         <label for="entryTitle">제목</label>
-                        <input type="text" id="entryTitle" placeholder="오늘 한 일을 한 줄로 요약하세요" required>
+                        <input type="text" id="entryTitle" placeholder="한 일을 한 줄로 요약하세요" required>
                     </div>
                     <div class="form-group">
                         <label>활동 레벨</label>
