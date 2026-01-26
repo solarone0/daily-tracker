@@ -113,6 +113,62 @@
                 </div>
             </section>
 
+            <!-- Entry Form Section -->
+            <section class="entry-section glass-card" id="entryPanel">
+                <div class="entry-header">
+                    <h2>📝 오늘의 기록</h2>
+                    <span class="entry-date" id="entryDate"></span>
+                </div>
+                <form class="entry-form" id="entryForm">
+                    <div class="form-group">
+                        <label for="entryTitle">제목</label>
+                        <input type="text" id="entryTitle" placeholder="오늘 한 일을 한 줄로 요약하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label>활동 레벨</label>
+                        <div class="level-selector" id="levelSelector">
+                            <button type="button" class="level-btn" data-level="1">
+                                <span class="level-dot level-1"></span>
+                                <span>조금</span>
+                            </button>
+                            <button type="button" class="level-btn" data-level="2">
+                                <span class="level-dot level-2"></span>
+                                <span>보통</span>
+                            </button>
+                            <button type="button" class="level-btn active" data-level="3">
+                                <span class="level-dot level-3"></span>
+                                <span>많이</span>
+                            </button>
+                            <button type="button" class="level-btn" data-level="4">
+                                <span class="level-dot level-4"></span>
+                                <span>최고</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="entryContent">상세 내용 (마크다운 지원)</label>
+                        <textarea id="entryContent" rows="8"
+                            placeholder="## 오늘 한 일&#10;&#10;- 첫 번째 할 일&#10;- 두 번째 할 일&#10;&#10;## 회고&#10;&#10;오늘의 느낀 점을 적어주세요."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="previewBtn">
+                            👁️ 미리보기
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveBtn">
+                            💾 저장하기
+                        </button>
+                    </div>
+                    <div class="form-status" id="formStatus"></div>
+                </form>
+                <div class="entry-preview" id="entryPreview" style="display: none;">
+                    <div class="preview-header">
+                        <h3>미리보기</h3>
+                        <button type="button" class="btn btn-secondary btn-sm" id="closePreviewBtn">닫기</button>
+                    </div>
+                    <div class="preview-content" id="previewContent"></div>
+                </div>
+            </section>
+
             <!-- Rocket Launch Visual -->
             <section class="rocket-section glass-card">
                 <div class="rocket-header">
@@ -195,6 +251,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="config.js"></script>
     <script src="app.js"></script>
 </body>
 

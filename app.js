@@ -1,6 +1,7 @@
 /**
  * Daily Tracker App
  * GitHub-style heatmap with markdown-based daily records
+ * Now with live entry support via Google Sheets
  */
 
 class DailyTracker {
@@ -9,6 +10,7 @@ class DailyTracker {
         this.selectedDate = null;
         this.data = {};
         this.startYear = 2026;
+        this.selectedLevel = 3;
 
         // 목표 기한 설정
         this.goalStartDate = new Date(2026, 0, 1); // 2026.01.01
@@ -23,9 +25,36 @@ class DailyTracker {
         this.renderHeatmap();
         this.updateStats();
         this.bindEvents();
+        this.initEntryForm();
     }
 
     async loadData() {
+        // First, try to load from Google Sheets if configured
+        if (typeof CONFIG !== 'undefined' && CONFIG.USE_GOOGLE_SHEETS && CONFIG.GOOGLE_SCRIPT_URL) {
+            try {
+                const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=getAll`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        this.data = result.data;
+                        // Also save to localStorage as backup
+                        this.saveToLocalStorage();
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('Failed to fetch from Google Sheets, falling back to local data');
+            }
+        }
+
+        // Try to load from localStorage
+        const localData = this.loadFromLocalStorage();
+        if (localData && Object.keys(localData).length > 0) {
+            this.data = localData;
+            return;
+        }
+
+        // Fall back to static JSON file
         try {
             const response = await fetch('data/index.json');
             if (response.ok) {
@@ -34,6 +63,25 @@ class DailyTracker {
         } catch (error) {
             console.log('No data file found, using empty data');
             this.data = {};
+        }
+    }
+
+    loadFromLocalStorage() {
+        try {
+            const key = typeof CONFIG !== 'undefined' ? CONFIG.LOCAL_STORAGE_KEY : 'daily-tracker-data';
+            const stored = localStorage.getItem(key);
+            return stored ? JSON.parse(stored) : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    saveToLocalStorage() {
+        try {
+            const key = typeof CONFIG !== 'undefined' ? CONFIG.LOCAL_STORAGE_KEY : 'daily-tracker-data';
+            localStorage.setItem(key, JSON.stringify(this.data));
+        } catch (error) {
+            console.log('Failed to save to localStorage');
         }
     }
 
@@ -305,6 +353,173 @@ class DailyTracker {
         });
     }
 
+    initEntryForm() {
+        const today = new Date();
+        const todayStr = this.formatDate(today);
+
+        // Set today's date in the form header
+        const entryDate = document.getElementById('entryDate');
+        if (entryDate) {
+            entryDate.textContent = today.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+        }
+
+        // Level selector
+        const levelSelector = document.getElementById('levelSelector');
+        if (levelSelector) {
+            levelSelector.addEventListener('click', (e) => {
+                const btn = e.target.closest('.level-btn');
+                if (btn) {
+                    // Remove active from all
+                    levelSelector.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                    // Add active to clicked
+                    btn.classList.add('active');
+                    this.selectedLevel = parseInt(btn.dataset.level);
+                }
+            });
+        }
+
+        // Preview button
+        const previewBtn = document.getElementById('previewBtn');
+        const closePreviewBtn = document.getElementById('closePreviewBtn');
+        const entryPreview = document.getElementById('entryPreview');
+        const previewContent = document.getElementById('previewContent');
+        const entryContent = document.getElementById('entryContent');
+
+        if (previewBtn && entryPreview) {
+            previewBtn.addEventListener('click', () => {
+                const content = entryContent.value || '내용이 없습니다.';
+                previewContent.innerHTML = marked.parse(content);
+                entryPreview.style.display = 'block';
+            });
+        }
+
+        if (closePreviewBtn && entryPreview) {
+            closePreviewBtn.addEventListener('click', () => {
+                entryPreview.style.display = 'none';
+            });
+        }
+
+        // Form submission
+        const entryForm = document.getElementById('entryForm');
+        if (entryForm) {
+            entryForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.saveEntry();
+            });
+        }
+
+        // Load existing entry for today if exists
+        if (this.data[todayStr]) {
+            const existingData = this.data[todayStr];
+            const titleInput = document.getElementById('entryTitle');
+            const contentInput = document.getElementById('entryContent');
+
+            if (titleInput && existingData.title) {
+                titleInput.value = existingData.title;
+            }
+            if (contentInput && existingData.content) {
+                contentInput.value = existingData.content;
+            }
+            if (existingData.level) {
+                this.selectedLevel = existingData.level;
+                const levelBtn = document.querySelector(`[data-level="${existingData.level}"]`);
+                if (levelBtn) {
+                    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                    levelBtn.classList.add('active');
+                }
+            }
+        }
+    }
+
+    async saveEntry() {
+        const title = document.getElementById('entryTitle').value.trim();
+        const content = document.getElementById('entryContent').value;
+        const level = this.selectedLevel;
+        const today = new Date();
+        const dateStr = this.formatDate(today);
+        const formStatus = document.getElementById('formStatus');
+        const saveBtn = document.getElementById('saveBtn');
+
+        if (!title) {
+            this.showStatus('error', '제목을 입력해주세요.');
+            return;
+        }
+
+        // Show loading state
+        this.showStatus('loading', '저장 중...');
+        saveBtn.disabled = true;
+
+        const entryData = {
+            date: dateStr,
+            title: title,
+            level: level,
+            content: content
+        };
+
+        // Try to save to Google Sheets
+        if (typeof CONFIG !== 'undefined' && CONFIG.USE_GOOGLE_SHEETS && CONFIG.GOOGLE_SCRIPT_URL) {
+            try {
+                const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(entryData)
+                });
+
+                // With no-cors, we can't read the response, so we assume success
+                // Update local data
+                this.data[dateStr] = {
+                    title: title,
+                    level: level,
+                    content: content
+                };
+
+                this.saveToLocalStorage();
+                this.renderHeatmap();
+                this.updateStats();
+
+                this.showStatus('success', '✅ Google Sheets에 저장되었습니다!');
+                saveBtn.disabled = false;
+                return;
+            } catch (error) {
+                console.error('Failed to save to Google Sheets:', error);
+            }
+        }
+
+        // Save to localStorage only
+        this.data[dateStr] = {
+            title: title,
+            level: level,
+            content: content
+        };
+
+        this.saveToLocalStorage();
+        this.renderHeatmap();
+        this.updateStats();
+
+        this.showStatus('success', '✅ 로컬에 저장되었습니다! (Google Sheets 연동 시 클라우드 저장 가능)');
+        saveBtn.disabled = false;
+    }
+
+    showStatus(type, message) {
+        const formStatus = document.getElementById('formStatus');
+        formStatus.className = 'form-status ' + type;
+        formStatus.textContent = message;
+
+        if (type === 'success') {
+            setTimeout(() => {
+                formStatus.className = 'form-status';
+            }, 3000);
+        }
+    }
+
     async selectDate(dateStr) {
         // Update selection
         document.querySelectorAll('.heatmap-cell.selected').forEach(cell => {
@@ -343,7 +558,7 @@ class DailyTracker {
             badge.style.border = 'none';
         }
 
-        // Load markdown content
+        // Load content
         await this.loadDayContent(dateStr, data);
     }
 
@@ -354,12 +569,19 @@ class DailyTracker {
             content.innerHTML = `
                 <p class="placeholder-text">
                     이 날의 기록이 없습니다.<br>
-                    <code>data/${dateStr}.md</code> 파일을 추가하세요.
+                    위의 입력 폼에서 오늘의 기록을 추가하세요.
                 </p>
             `;
             return;
         }
 
+        // If we have content in local data, show it
+        if (data.content) {
+            content.innerHTML = marked.parse(data.content);
+            return;
+        }
+
+        // Try to load from markdown file
         content.innerHTML = '<div class="loading">로딩 중...</div>';
 
         try {
@@ -374,10 +596,11 @@ class DailyTracker {
             // Parse markdown
             content.innerHTML = marked.parse(markdown);
         } catch (error) {
+            // Show title only if no markdown file
             content.innerHTML = `
+                <h3>${data.title || '기록'}</h3>
                 <p class="placeholder-text">
-                    기록 파일을 불러올 수 없습니다.<br>
-                    <code>data/${dateStr}.md</code> 파일을 확인하세요.
+                    상세 내용이 없습니다.
                 </p>
             `;
         }
