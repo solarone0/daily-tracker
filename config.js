@@ -10,10 +10,10 @@ const CONFIG = {
     // 2. Go to Extensions > Apps Script
     // 3. Paste the code from google-apps-script.gs
     // 4. Deploy as Web App and paste the URL here
-    GOOGLE_SCRIPT_URL: '',
+    GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwRxEQdaI6B9cgZk38n1n-6shcINqE3K1gFy_0Dy1E_u4sUvw5unNzE5Qr8BCSZWOvRPw/exec',
 
     // Set to true once you've configured the Google Script URL
-    USE_GOOGLE_SHEETS: false,
+    USE_GOOGLE_SHEETS: true,
 
     // Local storage key for offline data
     LOCAL_STORAGE_KEY: 'daily-tracker-data'

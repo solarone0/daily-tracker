@@ -73,8 +73,19 @@ function getAllRecords() {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (row[0]) {
-      records[row[0]] = {
-        title: row[1],
+      // Convert Date object to YYYY-MM-DD string if needed
+      let dateKey = row[0];
+      if (dateKey instanceof Date) {
+        const year = dateKey.getFullYear();
+        const month = String(dateKey.getMonth() + 1).padStart(2, '0');
+        const day = String(dateKey.getDate()).padStart(2, '0');
+        dateKey = `${year}-${month}-${day}`;
+      } else if (typeof dateKey !== 'string') {
+        dateKey = String(dateKey);
+      }
+      
+      records[dateKey] = {
+        title: row[1] || '',
         level: parseInt(row[2]) || 0,
         content: row[3] || '',
         updatedAt: row[4] || ''
@@ -93,12 +104,21 @@ function getRecord(date) {
   const data = sheet.getDataRange().getValues();
   
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === date) {
+    // Convert Date object to YYYY-MM-DD string if needed
+    let rowDate = data[i][0];
+    if (rowDate instanceof Date) {
+      const year = rowDate.getFullYear();
+      const month = String(rowDate.getMonth() + 1).padStart(2, '0');
+      const day = String(rowDate.getDate()).padStart(2, '0');
+      rowDate = `${year}-${month}-${day}`;
+    }
+    
+    if (rowDate === date) {
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
         data: {
-          date: data[i][0],
-          title: data[i][1],
+          date: rowDate,
+          title: data[i][1] || '',
           level: parseInt(data[i][2]) || 0,
           content: data[i][3] || '',
           updatedAt: data[i][4] || ''
@@ -121,7 +141,16 @@ function saveRecord(data) {
   // Find existing row
   let rowIndex = -1;
   for (let i = 1; i < allData.length; i++) {
-    if (allData[i][0] === data.date) {
+    // Convert Date object to YYYY-MM-DD string if needed
+    let rowDate = allData[i][0];
+    if (rowDate instanceof Date) {
+      const year = rowDate.getFullYear();
+      const month = String(rowDate.getMonth() + 1).padStart(2, '0');
+      const day = String(rowDate.getDate()).padStart(2, '0');
+      rowDate = `${year}-${month}-${day}`;
+    }
+    
+    if (rowDate === data.date) {
       rowIndex = i + 1; // 1-indexed for sheet
       break;
     }

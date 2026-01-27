@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 마이그레이션 - Google Sheets로 이전</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #4ade80;
+        }
+
+        .data-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .data-item .date {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .data-item .title {
+            color: #ccc;
+        }
+
+        .data-item .level {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .level-1 {
+            background: #0e4429;
+        }
+
+        .level-2 {
+            background: #006d32;
+        }
+
+        .level-3 {
+            background: #26a641;
+        }
+
+        .level-4 {
+            background: #39d353;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #888;
+        }
+
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-success {
+            color: #4ade80;
+        }
+
+        .log-error {
+            color: #f87171;
+        }
+
+        .log-info {
+            color: #60a5fa;
+        }
+
+        .summary {
+            text-align: center;
+            padding: 20px;
+            background: rgba(74, 222, 128, 0.1);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .summary h3 {
+            color: #4ade80;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📦 데이터 마이그레이션</h1>
+        <p class="subtitle">기존 로컬 데이터를 Google Sheets로 이전합니다</p>
+
+        <div class="card">
+            <h2>📂 마이그레이션할 데이터</h2>
+            <div class="data-list" id="dataList">
+                <p style="color: #888;">로딩 중...</p>
+            </div>
+            <button class="btn" id="migrateBtn" disabled>🚀 Google Sheets로 마이그레이션</button>
+
+            <div class="progress" id="progressSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">0 / 0 완료</p>
+            </div>
+
+            <div class="log" id="logSection" style="display: none;"></div>
+
+            <div class="summary" id="summarySection" style="display: none;">
+                <h3>✅ 마이그레이션 완료!</h3>
+                <p id="summaryText"></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>ℹ️ 안내</h2>
+            <ul style="padding-left: 20px; line-height: 1.8; color: #ccc;">
+                <li>index.json의 모든 데이터를 Google Sheets로 복사합니다</li>
+                <li>마크다운 파일(.md)이 있으면 내용도 함께 저장됩니다</li>
+                <li>이미 존재하는 날짜는 덮어쓰기됩니다</li>
+                <li>마이그레이션 후 앱을 새로고침하면 데이터를 확인할 수 있습니다</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        const GOOGLE_SCRIPT_URL = CONFIG.GOOGLE_SCRIPT_URL;
+        let allData = [];
+
+        async function loadData() {
+            const dataList = document.getElementById('dataList');
+            const migrateBtn = document.getElementById('migrateBtn');
+
+            try {
+                // Load index.json
+                const response = await fetch('data/index.json');
+                const indexData = await response.json();
+
+                // Sort by date
+                const entries = Object.entries(indexData).sort((a, b) => a[0].localeCompare(b[0]));
+
+                if (entries.length === 0) {
+                    dataList.innerHTML = '<p style="color: #888;">마이그레이션할 데이터가 없습니다.</p>';
+                    return;
+                }
+
+                // Try to load markdown content for each entry
+                for (const [date, data] of entries) {
+                    let content = '';
+                    try {
+                        const mdResponse = await fetch(`data/${date}.md`);
+                        if (mdResponse.ok) {
+                            let markdown = await mdResponse.text();
+                            // Remove frontmatter
+                            markdown = markdown.replace(/^---[\s\S]*?---\n*/, '');
+                            content = markdown.trim();
+                        }
+                    } catch (e) {
+                        // No markdown file, that's ok
+                    }
+
+                    allData.push({
+                        date,
+                        title: data.title,
+                        level: data.level,
+                        content
+                    });
+                }
+
+                // Render list
+                dataList.innerHTML = allData.map(item => `
+                    <div class="data-item">
+                        <span class="date">${item.date}</span>
+                        <span class="title">${item.title}</span>
+                        <span class="level level-${item.level}">Lv.${item.level}</span>
+                    </div>
+                `).join('');
+
+                migrateBtn.disabled = false;
+                migrateBtn.textContent = `🚀 ${allData.length}개 항목 마이그레이션`;
+
+            } catch (error) {
+                dataList.innerHTML = `<p style="color: #f87171;">데이터 로드 실패: ${error.message}</p>`;
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const logSection = document.getElementById('logSection');
+            logSection.style.display = 'block';
+            const logItem = document.createElement('div');
+            logItem.className = `log-item log-${type}`;
+            logItem.textContent = message;
+            logSection.appendChild(logItem);
+            logSection.scrollTop = logSection.scrollHeight;
+        }
+
+        async function migrate() {
+            const migrateBtn = document.getElementById('migrateBtn');
+            const progressSection = document.getElementById('progressSection');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const summarySection = document.getElementById('summarySection');
+            const summaryText = document.getElementById('summaryText');
+
+            migrateBtn.disabled = true;
+            migrateBtn.textContent = '마이그레이션 중...';
+            progressSection.style.display = 'block';
+
+            let success = 0;
+            let failed = 0;
+
+            for (let i = 0; i < allData.length; i++) {
+                const item = allData[i];
+
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(item)
+                    });
+
+                    // With no-cors we can't read response, assume success
+                    success++;
+                    addLog(`✓ ${item.date}: ${item.title}`, 'success');
+
+                } catch (error) {
+                    failed++;
+                    addLog(`✗ ${item.date}: ${error.message}`, 'error');
+                }
+
+                // Update progress
+                const progress = ((i + 1) / allData.length) * 100;
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${i + 1} / ${allData.length} 완료`;
+
+                // Small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Done!
+            summarySection.style.display = 'block';
+            summaryText.textContent = `${success}개 성공, ${failed}개 실패`;
+            migrateBtn.textContent = '✅ 완료!';
+
+            addLog(`마이그레이션 완료: ${success}개 성공, ${failed}개 실패`, success === allData.length ? 'success' : 'info');
+        }
+
+        document.getElementById('migrateBtn').addEventListener('click', migrate);
+
+        // Load data on page load
+        loadData();
+    </script>
+</body>
+
+</html>

@@ -368,6 +368,66 @@ class DailyTracker {
                 this.renderHeatmap();
             }
         });
+
+        // Sync button - Force reload from Google Sheets
+        const syncBtn = document.getElementById('syncBtn');
+        if (syncBtn) {
+            syncBtn.addEventListener('click', () => this.forceSync());
+        }
+    }
+
+    async forceSync() {
+        const syncBtn = document.getElementById('syncBtn');
+        if (!syncBtn) return;
+
+        // Show loading state
+        const originalText = syncBtn.textContent;
+        syncBtn.textContent = '⏳ 동기화 중...';
+        syncBtn.disabled = true;
+
+        try {
+            // Clear localStorage first to ensure fresh data
+            const key = typeof CONFIG !== 'undefined' ? CONFIG.LOCAL_STORAGE_KEY : 'daily-tracker-data';
+            localStorage.removeItem(key);
+
+            // Fetch fresh data from Google Sheets
+            if (typeof CONFIG !== 'undefined' && CONFIG.USE_GOOGLE_SHEETS && CONFIG.GOOGLE_SCRIPT_URL) {
+                const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=getAll&t=${Date.now()}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        this.data = result.data;
+                        this.saveToLocalStorage();
+
+                        // Re-render everything
+                        this.renderHeatmap();
+                        this.updateStats();
+
+                        syncBtn.textContent = '✅ 완료!';
+                        setTimeout(() => {
+                            syncBtn.textContent = originalText;
+                            syncBtn.disabled = false;
+                        }, 2000);
+                        return;
+                    }
+                }
+            }
+
+            // If failed, show error
+            syncBtn.textContent = '❌ 실패';
+            setTimeout(() => {
+                syncBtn.textContent = originalText;
+                syncBtn.disabled = false;
+            }, 2000);
+
+        } catch (error) {
+            console.error('Sync failed:', error);
+            syncBtn.textContent = '❌ 오류';
+            setTimeout(() => {
+                syncBtn.textContent = originalText;
+                syncBtn.disabled = false;
+            }, 2000);
+        }
     }
 
     initEntryForm() {
