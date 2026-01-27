@@ -227,10 +227,29 @@ class DailyTracker {
             'Phase 5: 발사! 🔥'
         ];
 
+        // Phase images mapping
+        const phaseImages = [
+            'images/rocket-phase-1.png',  // Phase 1: Construction
+            'images/rocket-phase-2.png',  // Phase 2: Assembly
+            'images/rocket-phase-3.jpg',  // Phase 3: Fueling (user's original image)
+            'images/rocket-phase-3.jpg',  // Phase 4: Countdown (same as fuel)
+            'images/rocket-phase-5.png'   // Phase 5: Launch!
+        ];
+
         // Update phase text
         const phaseLabel = document.getElementById('rocketPhase');
         if (phaseLabel) {
             phaseLabel.textContent = phaseNames[phase - 1];
+        }
+
+        // Update rocket image
+        const rocketImage = document.getElementById('rocketImage');
+        if (rocketImage) {
+            rocketImage.src = phaseImages[phase - 1];
+            rocketImage.classList.remove('launching');
+            if (phase === 5) {
+                rocketImage.classList.add('launching');
+            }
         }
 
         // Update phase indicators
@@ -252,41 +271,6 @@ class DailyTracker {
                 line.classList.add('completed');
             }
         });
-
-        // Update rocket visuals
-        const launchPad = document.getElementById('launchPad');
-        const launchTower = document.getElementById('launchTower');
-        const rocket = document.getElementById('rocket');
-        const rocketFlame = document.getElementById('rocketFlame');
-        const smokeCloud = document.getElementById('smokeCloud');
-        const towerArm = document.querySelector('.tower-arm');
-
-        if (!launchPad) return;
-
-        // Phase 1: Show launch pad
-        if (phase >= 1) {
-            launchPad.classList.add('visible');
-        }
-
-        // Phase 2: Show tower and rocket
-        if (phase >= 2) {
-            launchTower.classList.add('visible');
-            rocket.classList.add('visible');
-        }
-
-        // Phase 3: Keep rocket visible (fueling animation could be added)
-
-        // Phase 4: Retract tower arm
-        if (phase >= 4 && towerArm) {
-            towerArm.classList.add('retracted');
-        }
-
-        // Phase 5: Launch!
-        if (phase >= 5) {
-            rocketFlame.classList.add('active');
-            smokeCloud.classList.add('active');
-            rocket.classList.add('launching');
-        }
     }
 
     formatDisplayDate(date) {
