@@ -702,7 +702,7 @@ body::before {
     justify-content: center;
     align-items: center;
     padding: var(--spacing-lg);
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
     border-radius: var(--radius-lg);
     overflow: hidden;
 }
