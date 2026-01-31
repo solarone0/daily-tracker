@@ -17,9 +17,12 @@
             <h1 class="logo">📅 Daily Tracker</h1>
             <div class="header-actions">
                 <p class="subtitle">매일의 성장을 기록하세요</p>
-                <button class="sync-btn" id="syncBtn" title="Google Sheets에서 최신 데이터 가져오기">
-                    🔄 동기화
-                </button>
+                <div class="btn-group">
+                    <button class="icon-btn" id="settingsBtn" title="GitHub 설정">⚙️</button>
+                    <button class="sync-btn" id="syncBtn" title="GitHub에서 최신 데이터 가져오기">
+                        🔄 동기화
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -187,6 +190,28 @@
         <footer class="footer">
             <p>Powered by GitHub Pages • <a href="https://github.com" target="_blank">View on GitHub</a></p>
         </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3>⚙️ GitHub 설정</h3>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="settings-desc">데이터를 GitHub에 저장하기 위해 Personal Access Token이 필요합니다.</p>
+                <div class="form-group">
+                    <label for="githubToken">GitHub Personal Access Token (classic)</label>
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                    <p class="help-text">토큰은 브라우저에만 저장되며 외부로 유출되지 않습니다. (필요 권한: repo)</p>
+                </div>
+                <div class="settings-actions">
+                    <button class="btn btn-secondary" id="clearTokenBtn">토큰 삭제</button>
+                    <button class="btn btn-primary" id="saveSettingsBtn">저장하기</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
